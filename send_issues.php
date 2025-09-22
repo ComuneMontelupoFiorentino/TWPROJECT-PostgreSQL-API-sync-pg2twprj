@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/config/get_db.php';
-require_once __DIR__ . '/open_todo_function.php'; // contiene sendTodoFromQueue
+require_once __DIR__ . '/open_issue_function.php'; // contiene sendTodoFromQueue
 
 $logFile = __DIR__ . '/logs/todo_queue.log';
 
@@ -20,57 +20,51 @@ try {
     $stmt = $db->query("SELECT * FROM audit.todo_queue WHERE status IN ('pending', 'failed') ORDER BY created_at ASC");
     $todos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!$todos) {
-        write_log("Nessuna todo da inviare", $logFile);
-    } else {
-        write_log("Trovate " . count($todos) . " todo da inviare", $logFile);
+    // Carico apiKey
+    $config = require __DIR__ . '/config/api.php';
+    require_once __DIR__ . '/decrypt_util.php';
+    $APIKey = decrypt_field($config['APIKey']);
 
-        // Carico apiKey
-        $config = require __DIR__ . '/config/api.php';
-        require_once __DIR__ . '/decrypt_util.php';
-        $APIKey = decrypt_field($config['APIKey']);
+    foreach ($todos as $todoRecord) {
+        $issueId = sendTodoFromQueue($todoRecord, $APIKey);
 
-        foreach ($todos as $todoRecord) {
-            $issueId = sendTodoFromQueue($todoRecord, $APIKey);
+        if ($issueId !== false) {
 
-            if ($issueId !== false) {
+            // Invio riuscito → aggiorno anche id_todo_twprj
+            $newStatus = 'sended';
+            $stmtUpdate = $db->prepare("
+                UPDATE audit.todo_queue
+                SET status = :status,
+                    sent_at = NOW(),
+                    todo_status_twprj = 1,
+                    id_todo_twprj = :issueId
+                WHERE id = :id
+            ");
+            $stmtUpdate->execute([
+                ':status'  => $newStatus,
+                ':issueId' => $issueId,
+                ':id'      => $todoRecord['id']
+            ]);
 
-                // Invio riuscito → aggiorno anche id_todo_twprj
-                $newStatus = 'sended';
-                $stmtUpdate = $db->prepare("
-                    UPDATE audit.todo_queue
-                    SET status = :status,
-                        sent_at = NOW(),
-                        todo_status_twprj = 1,
-                        id_todo_twprj = :issueId
-                    WHERE id = :id
-                ");
-                $stmtUpdate->execute([
-                    ':status'  => $newStatus,
-                    ':issueId' => $issueId,
-                    ':id'      => $todoRecord['id']
-                ]);
+            write_log("Todo ID {$todoRecord['id']} inviata. ID Twproject: $issueId", $logFile);
+        } else {
 
-                write_log("Todo ID {$todoRecord['id']} inviata. ID Twproject: $issueId", $logFile);
-            } else {
+            // Invio fallito → aggiorno solo lo status
+            $newStatus = 'failed';
+            $stmtUpdate = $db->prepare("
+                UPDATE audit.todo_queue
+                SET status = :status,
+                    sent_at = NOW()
+                WHERE id = :id
+            ");
+            $stmtUpdate->execute([
+                ':status'  => $newStatus,
+                ':id'      => $todoRecord['id']
+            ]);
 
-                // Invio fallito → aggiorno solo lo status
-                $newStatus = 'failed';
-                $stmtUpdate = $db->prepare("
-                    UPDATE audit.todo_queue
-                    SET status = :status,
-                        sent_at = NOW()
-                    WHERE id = :id
-                ");
-                $stmtUpdate->execute([
-                    ':status'  => $newStatus,
-                    ':id'      => $todoRecord['id']
-                ]);
+            write_log("Todo ID {$todoRecord['id']} fallita", $logFile);
 
-                write_log("Todo ID {$todoRecord['id']} fallita", $logFile);
-
-            } 
-        }
+        } 
     }
 
     write_log("=== Fine invio todo ===", $logFile);
