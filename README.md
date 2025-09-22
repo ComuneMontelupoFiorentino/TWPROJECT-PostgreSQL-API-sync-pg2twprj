@@ -7,8 +7,9 @@ Automazione per invio e sincronizzazione delle issue/todo da PostgreSQL a Twproj
 ## Descrizione
 
 Questo progetto consente di:
-1. Recuperare le todo dalla tabella PostgreSQL e creare issue su Twproject.
+1. Recuperare le todo da una tabella PostgreSQL e creare issue su Twproject.
 2. Monitorare lo stato degli issue creati e aggiornare PostgreSQL con status e commenti.
+3. Monitorare un task su twproject e inserire gli issues in PostgreSQL come Tickets.
 
 Sviluppato in **PHP**, con **PostgreSQL**, schedulabile tramite **cron**.
 
