@@ -27,17 +27,6 @@ Sviluppato in **PHP**, con **PostgreSQL**, schedulabile tramite **cron**.
 
 ---
 
-## Configurazione
-
-1. `config/api.php`:
-```php
-<?php
-return [
-    'APIKey' => 'chiave_encrypted'
-];
-
----
-
 ## License
 
 This project is licensed under the European Union Public License v1.2 (EUPL).
