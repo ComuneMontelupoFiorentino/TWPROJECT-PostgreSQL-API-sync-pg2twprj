@@ -24,17 +24,17 @@ Per ogni funzionalità, è possibile lanciare lo script in due modalità distint
 `InsertComment`: Consente di inserire commenti su un issues (todo) esistente in modalità schedulata o tramite CLI.
 
 `SyncStatusPgToTwprj`: Consente la sincronizzazione dello stato di un issues (todo) in base allo stato del record (ticket) che lo ha generato: Estrae da TwProject i record aperti ("status" => "1") da un task predefinito, confronta ogni issue (todo) con i record della tabella audit.control_issue_to_ticket.
-- CASO 1: L'issue non esiste nella tabella, vuol dire che è stato eliminato da ProSIT o non è stato inserito e verrà stampato apposito Log.
-- CASO 2: Lo stato è allineato, skip.
-- CASO 3: Lo stato non è allineato:
-- CASO 3.1: Su DB risulta sincronizzato (campo sync = true) e su TwProject risulta chiuso (Status = 2), vuol dire che l'issue è stato riaperto => il ticket verrà riaperto.
-- CASO 3.2: Sul DB  risulta non sincronizzato (campo sync = false) e su TwProject risulta chiuso (Status = 2), vuol dire che il ticket è stato chiuso su prosit e l'issue (todo) verrà chiuso su TWproject (Status = 2).
+- **CASO 1**: L'issue non esiste nella tabella, vuol dire che è stato eliminato da ProSIT o non è stato inserito e verrà stampato apposito Log.
+- **CASO 2**: Lo stato è allineato, skip.
+- **CASO 3**: Lo stato non è allineato:
+- **CASO 3.1**: Su DB risulta sincronizzato (campo sync = true) e su TwProject risulta chiuso (Status = 2), vuol dire che l'issue è stato riaperto => il ticket verrà riaperto.
+- **CASO 3.2**: Sul DB  risulta non sincronizzato (campo sync = false) e su TwProject risulta chiuso (Status = 2), vuol dire che il ticket è stato chiuso su prosit e l'issue (todo) verrà chiuso su TWproject (Status = 2).
 > NOTA
 >
 > se un Todo sincronizzato su prosit viene cancellato o eliminato su twproject, su prosit restarà invariato
-- `SyncStatusTwToSIT`: Consente la sincronizzazione dello stato di un record (ticket) in base allo stato del issues (todo) che lo ha generato.
-- `SyncStatus`: Consente di eseguire antrambi le funzioni SyncStatusPgToTwprj e SyncStatusTwToSIT.
-- `CheckIntegration`: Consente di eseguire Query finalizzate alla scelta della funzione da eseguire. Se attivata controlla, tramite chiamate "leggere" su PostgreSQL e Twprject, in autonomia la necessità di sincronizzazione ed eventualmente esegue la specifica funzione. Utile per schedulazioni tramite CRON
+`SyncStatusTwToSIT`: Consente la sincronizzazione dello stato di un record (ticket) in base allo stato del issues (todo) che lo ha generato.
+`SyncStatus`: Consente di eseguire antrambi le funzioni SyncStatusPgToTwprj e SyncStatusTwToSIT.
+`CheckIntegration`: Consente di eseguire Query finalizzate alla scelta della funzione da eseguire. Se attivata controlla, tramite chiamate "leggere" su PostgreSQL e Twprject, in autonomia la necessità di sincronizzazione ed eventualmente esegue la specifica funzione. Utile per schedulazioni tramite CRON
 
 ### Struttura delle cartelle
 
