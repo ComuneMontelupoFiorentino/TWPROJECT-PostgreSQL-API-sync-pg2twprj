@@ -112,7 +112,7 @@ I comandi possono necessitare di filtri
 | **FUNZIONALITA**              | **COMANDO**      | **PARAMETRO**            | **NOTE** |
 |-------------------------------|------------------|--------------------------|----------------------|
 | IssueToTicket                 | -IT              |                          |                      |
-| OpendTodo                     | -OT              | --[campo] "[valore]"     | Senza parametri legge da tabella locale todo_queue, altrimenti settare i parametri come descritti nella [documentazione]([https://www.postgresql.org/docs/current/libpq-pgservice.html](https://twproject.com/support/api-documentation/#issue-create)), ad eccezione di gravity per cui è consentito usare solo la versione numerica: 1 = "01_GRAVITY_LOW", 2 = "02_GRAVITY_MEDIUM", 3 = "03_GRAVITY_HIGH",4 = "04_GRAVITY_CRITICAL", 5 = "05_GRAVITY_BLOCK"          |
+| OpendTodo                     | -OT              | --[campo] "[valore]"     | [Documentazione API]([https://www.postgresql.org/docs/current/libpq-pgservice.html](https://twproject.com/support/api-documentation/#issue-create)), per `Gravity` usare: 1 = "01_GRAVITY_LOW", 2 = "02_GRAVITY_MEDIUM", 3 = "03_GRAVITY_HIGH",4 = "04_GRAVITY_CRITICAL", 5 = "05_GRAVITY_BLOCK"          |
 | InsertComment                 | -IC              | --idIssue [ID TODO] --comment "[Test commento]" | Senza parametro verranno inviati i commenti presenti nella tabella postgres, altrimenti i parametri sono obbligatori           |
 | SyncStatusPgToTwprj           | -SSTw            |                          |                      |
 | SyncStatusTwToSIT             | -SSSit           |                          |                      |
