@@ -20,7 +20,12 @@ Per ogni funzionalità, è possibile lanciare lo script in due modalità distint
 - `IssueToTicket`: Monitora i todo presenti in un Task e li importa nel database locale insieme agli allegati, se presenti: recupera le issue (todo) aperti (status = 1), verifica se esiste già nella tabella PostgreSQL e se assente la inserisce. Inoltre esegue il download locale degli allegati e li referenzia nel DB.   
 - `OpenTodo`: Consente la creazione di Issue (todo) su Twproject in due modalità: Schedulata leggendo la tabella `todo_queue` o tramite CLI.
 - `InsertComment`: Consente di inserire commenti su un issues (todo) esistente in modalità schedulata o tramite CLI.
-- `SyncStatusPgToTwprj`: Consente la sincronizzazione dello stato di un issues (todo) in base allo stato del record (ticket) che lo ha generato: Estrae da TwProject i record aperti ("status" => "1") da un task predefinito, confronta ogni issue (todo)  con i record della tabella audit.control_issue_to_ticket. Se l'issue non esiste nella tabella vuol dire che è stato eliminato da prosit o non è stato inserito e verrà stampato apposito Log. Se lo stato è allineato, skip. Se lo stato non è allineato ma risulta sincronizzato sul DB (campo sync = true) e su TwProject risulta chiuso (Status = 2) allora vuol dire che l'issue è stato riaperto e il ticket verrà riaperto. Se lo stato non è allineato e risulta non sincronizzato sul DB (campo sync = false) e su TwProject risulta chiuso (Status = 2) allora vuol dire che il ticket è stato chiuso su prosit e l'issue (todo) verrà chiuso su TWproject (Status = 2).
+- `SyncStatusPgToTwprj`: Consente la sincronizzazione dello stato di un issues (todo) in base allo stato del record (ticket) che lo ha generato: Estrae da TwProject i record aperti ("status" => "1") da un task predefinito, confronta ogni issue (todo) con i record della tabella audit.control_issue_to_ticket.
+  CASO 1: L'issue non esiste nella tabella, vuol dire che è stato eliminato da ProSIT o non è stato inserito e verrà stampato apposito Log.
+  CASO 2: Lo stato è allineato, skip.
+  CASO 3: Lo stato non è allineato:
+      CASO 3.1: Su DB risulta sincronizzato (campo sync = true) e su TwProject risulta chiuso (Status = 2), vuol dire che l'issue è stato riaperto => il ticket verrà riaperto.
+      CASO 3.2: Sul DB  risulta non sincronizzato (campo sync = false) e su TwProject risulta chiuso (Status = 2), vuol dire che il ticket è stato chiuso su prosit e l'issue (todo) verrà chiuso su TWproject (Status = 2).
 > NOTA
 >
 > se un Todo sincronizzato su prosit viene cancellato o eliminato su twproject, su prosit restarà invariato
