@@ -32,8 +32,11 @@ Per ogni funzionalità, è possibile lanciare lo script in due modalità distint
 > NOTA
 >
 > se un Todo sincronizzato su prosit viene cancellato o eliminato su twproject, su prosit restarà invariato
+
 `SyncStatusTwToSIT`: Consente la sincronizzazione dello stato di un record (ticket) in base allo stato del issues (todo) che lo ha generato.
+
 `SyncStatus`: Consente di eseguire antrambi le funzioni SyncStatusPgToTwprj e SyncStatusTwToSIT.
+
 `CheckIntegration`: Consente di eseguire Query finalizzate alla scelta della funzione da eseguire. Se attivata controlla, tramite chiamate "leggere" su PostgreSQL e Twprject, in autonomia la necessità di sincronizzazione ed eventualmente esegue la specifica funzione. Utile per schedulazioni tramite CRON
 
 ### Struttura delle cartelle
