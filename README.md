@@ -27,8 +27,8 @@ Per ogni funzionalità, è possibile lanciare lo script in due modalità distint
 - CASO 1: L'issue non esiste nella tabella, vuol dire che è stato eliminato da ProSIT o non è stato inserito e verrà stampato apposito Log.
 - CASO 2: Lo stato è allineato, skip.
 - CASO 3: Lo stato non è allineato:
--     CASO 3.1: Su DB risulta sincronizzato (campo sync = true) e su TwProject risulta chiuso (Status = 2), vuol dire che l'issue è stato riaperto => il ticket verrà riaperto.
--     CASO 3.2: Sul DB  risulta non sincronizzato (campo sync = false) e su TwProject risulta chiuso (Status = 2), vuol dire che il ticket è stato chiuso su prosit e l'issue (todo) verrà chiuso su TWproject (Status = 2).
+- CASO 3.1: Su DB risulta sincronizzato (campo sync = true) e su TwProject risulta chiuso (Status = 2), vuol dire che l'issue è stato riaperto => il ticket verrà riaperto.
+- CASO 3.2: Sul DB  risulta non sincronizzato (campo sync = false) e su TwProject risulta chiuso (Status = 2), vuol dire che il ticket è stato chiuso su prosit e l'issue (todo) verrà chiuso su TWproject (Status = 2).
 > NOTA
 >
 > se un Todo sincronizzato su prosit viene cancellato o eliminato su twproject, su prosit restarà invariato
