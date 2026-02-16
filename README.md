@@ -39,6 +39,8 @@ Per ogni funzionalità, è possibile lanciare lo script in due modalità distint
 
 `CheckIntegration`: Consente di eseguire Query finalizzate alla scelta della funzione da eseguire. Se attivata controlla, tramite chiamate "leggere" su PostgreSQL e Twprject, in autonomia la necessità di sincronizzazione ed eventualmente esegue la specifica funzione. Utile per schedulazioni tramite CRON
 
+`SetIssueCoord`: Consente di inserire le coordinate ad un issue.
+
 ### Struttura delle cartelle
 
 ```bash
