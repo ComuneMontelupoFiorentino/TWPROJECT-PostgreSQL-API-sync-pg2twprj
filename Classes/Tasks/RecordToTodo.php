@@ -6,6 +6,7 @@ namespace Classes\Tasks;
 use PDO;
 use Classes\Services\Logger;
 use RuntimeException;
+use Classes\Tasks\SetIssueCoord;
 
 class RecordToTodo
 {
@@ -13,6 +14,7 @@ class RecordToTodo
     private Logger $logger;
     private string $apiUrl;
     private string $apiKey;
+    private string $appEnvironment;
 
     private array $gravityMap = [
         1 => "01_GRAVITY_LOW",
@@ -26,6 +28,7 @@ class RecordToTodo
     {
         $this->pdo = $pdo;
         $this->logger = $logger;
+        $this->appEnvironment = $appEnvironment;
 
         $iniFile = __DIR__ . '/../../config/twproject_config.ini';
         if (!file_exists($iniFile)) {
@@ -52,6 +55,9 @@ class RecordToTodo
             if ($issueId !== false) {
                 $this->updateTodoSent($todo['id'] ?? 0, $issueId);
                 $this->logger->info("Todo inviata. ID Twproject: $issueId");
+
+                // Gestione coordinate (se presenti)
+                $this->handleCoordinates($todo['id'] ?? 0);
             } else {
                 $this->logger->error("Invio Todo fallito");
             }
@@ -75,6 +81,9 @@ class RecordToTodo
                 if ($issueId !== false) {
                     $this->updateTodoSent($row['id'], $issueId);
                     $this->logger->info("Todo ID {$row['id']} inviata. ID Twproject: $issueId");
+
+                    // Gestione coordinate
+                    $this->handleCoordinates((int)$row['id']);
                 } else {
                     $this->updateTodoFailed($row['id']);
                     $this->logger->error("Todo ID {$row['id']} fallita");
@@ -88,7 +97,33 @@ class RecordToTodo
 
         $this->logger->info("=== Fine invio todo ===");
     }
+    
+    /**
+     * Gestisce eventuale invio coordinate
+     */
+    private function handleCoordinates(int $recordId): void
+    {
+        try {
+            $setCoordTask = new SetIssueCoord(
+                $this->pdo,
+                $this->logger,
+                $this->appEnvironment
+            );
 
+            $result = $setCoordTask->setCoordinatesFromDb($recordId);
+
+            if ($result) {
+                $this->logger->info("Coordinate inviate per record $recordId");
+            } else {
+                $this->logger->info("Nessuna coordinata da inviare per record $recordId");
+            }
+
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                "Errore invio coordinate per record $recordId: " . $e->getMessage()
+            );
+        }
+    }
     private function sendTodo(array $todo): int|false
     {
         // Mappa gravity se presente
