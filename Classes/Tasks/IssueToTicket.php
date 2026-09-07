@@ -146,20 +146,20 @@ class IssueToTicket
             $this->logger->info("Nessun documento trovato per ticket {$idTicket}");
             return;
         }
-
+    
         $stmtDoc = $this->pdo->prepare("
             INSERT INTO segn.issue_docs_attachment (id_ticket, url, file_name)
             VALUES (:id_ticket, :url, :file_name)
         ");
-
+    
         foreach ($files as $file) {
             $publicUrl = $this->publicBaseUrl . rawurlencode($file['name']);
             $stmtDoc->execute([
                 ':id_ticket' => $idTicket,
                 ':url'       => $publicUrl,
-                ':file_name' => $file['name']
+                ':file_name' => $file['original_name'] // mostri il nome "pulito" all'utente
             ]);
-            $this->logger->info("File {$file['name']} scaricato e inserito in DB come URL: {$publicUrl}");
+            $this->logger->info("File {$file['original_name']} scaricato e inserito in DB come URL: {$publicUrl}");
         }
     }
 
@@ -200,29 +200,37 @@ class IssueToTicket
         if (!is_dir($this->downloadDir)) {
             mkdir($this->downloadDir, 0777, true);
         }
-
+    
+        $idIssue = (int)$issue['id'];
         $documents = $issue['documents'] ?? [];
         $filesLocal = [];
-
+    
         foreach ($documents as $doc) {
             if (empty($doc['url']) || empty($doc['name'])) {
                 continue;
             }
-
-            $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $doc['name']);
+    
+            $originalName = $doc['name'];
+            $sanitized    = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
+    
+            // Nome fisico univoco: prefisso con id_issue per evitare collisioni
+            $fileName = "issue{$idIssue}_{$sanitized}";
             $savePath = $this->downloadDir . '/' . $fileName;
-
+    
             try {
                 $this->downloadFile($doc['url'], $savePath);
-                $filesLocal[] = ['name' => $fileName, 'path' => $savePath];
+                $filesLocal[] = [
+                    'name'          => $fileName,      // nome fisico univoco (su disco/URL)
+                    'original_name' => $originalName,   // nome originale (per il frontend)
+                    'path'          => $savePath
+                ];
             } catch (Exception $e) {
                 $this->logger->error("Errore download file {$fileName}: {$e->getMessage()}");
             }
         }
-
+    
         return $filesLocal;
     }
-
     private function downloadFile(string $url, string $savePath): void
     {
         $fp = fopen($savePath, 'w');
