@@ -12,6 +12,7 @@ class CheckIntegration
 {
     private PDO $pdo;
     private Logger $logger;
+    private $lockHandle = null;
 
     /**
      * Mappa stato DB → comando CLI
@@ -131,7 +132,7 @@ class CheckIntegration
     private function executeCommand(string $command): void
     {
         $cmd = sprintf(
-            'php %s %s -%s 2>&1',
+            'timeout -k 30 300 php %s %s -%s 2>&1',
             escapeshellarg($this->cliScriptPath),
             escapeshellarg($this->envFlag),
             escapeshellarg($command)
@@ -139,11 +140,18 @@ class CheckIntegration
 
         $this->logger->info("Eseguo comando: {$cmd}");
 
-        $output = shell_exec($cmd);
+        $output   = [];
+        $exitCode = 0;
+        exec($cmd, $output, $exitCode);
+        $outStr = trim(implode("\n", $output));
 
-        $this->logger->info(
-            "Output {$command}: " . trim((string)$output)
-        );
+        if ($exitCode === 124 || $exitCode === 137) {
+            $this->logger->error("Comando {$command} UCCISO per timeout (exit {$exitCode}) dopo 300s");
+        } elseif ($exitCode !== 0) {
+            $this->logger->error("Comando {$command} fallito (exit {$exitCode}): {$outStr}");
+        } else {
+            $this->logger->info("Output {$command}: {$outStr}");
+        }
     }
 
     /**
