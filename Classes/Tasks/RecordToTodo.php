@@ -37,6 +37,7 @@ class RecordToTodo
 
         $section = "twprj_{$appEnvironment}";
         $ini = parse_ini_file($iniFile, true);
+
         if (empty($ini[$section])) {
             throw new RuntimeException("Sezione {$section} non presente in twproject_config.ini");
         }
@@ -53,14 +54,17 @@ class RecordToTodo
             $issueId = $this->sendTodo($todo);
 
             if ($issueId !== false) {
+
                 $this->updateTodoSent($todo['id'] ?? 0, $issueId);
                 $this->logger->info("Todo inviata. ID Twproject: $issueId");
 
                 // Gestione coordinate (se presenti)
                 $this->handleCoordinates($todo['id'] ?? 0);
+
             } else {
                 $this->logger->error("Invio Todo fallito");
             }
+
         } catch (\Throwable $e) {
             $this->logger->error("Errore invio Todo: " . $e->getMessage());
         }
@@ -71,33 +75,46 @@ class RecordToTodo
         $this->logger->info("=== Inizio invio todo da queue ===");
 
         $stmt = $this->pdo->query(
-            "SELECT * FROM audit.todo_queue WHERE status IN ('pending','failed') ORDER BY created_at ASC"
+            "SELECT * 
+             FROM audit.todo_queue 
+             WHERE status IN ('pending','failed') 
+             ORDER BY created_at ASC"
         );
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
             try {
                 $issueId = $this->sendTodo($row);
 
                 if ($issueId !== false) {
-                    $this->updateTodoSent($row['id'], $issueId);
-                    $this->logger->info("Todo ID {$row['id']} inviata. ID Twproject: $issueId");
+
+                    $this->updateTodoSent((int)$row['id'], $issueId);
+
+                    $this->logger->info(
+                        "Todo ID {$row['id']} inviata. ID Twproject: $issueId"
+                    );
 
                     // Gestione coordinate
                     $this->handleCoordinates((int)$row['id']);
+
                 } else {
-                    $this->updateTodoFailed($row['id']);
+
+                    $this->updateTodoFailed((int)$row['id']);
                     $this->logger->error("Todo ID {$row['id']} fallita");
                 }
 
             } catch (\Throwable $e) {
-                $this->updateTodoFailed($row['id']);
-                $this->logger->error("Errore invio Todo ID {$row['id']}: " . $e->getMessage());
+
+                $this->updateTodoFailed((int)$row['id']);
+                $this->logger->error(
+                    "Errore invio Todo ID {$row['id']}: " . $e->getMessage()
+                );
             }
         }
 
         $this->logger->info("=== Fine invio todo ===");
     }
-    
+
     /**
      * Gestisce eventuale invio coordinate
      */
@@ -124,11 +141,12 @@ class RecordToTodo
             );
         }
     }
+
     private function sendTodo(array $todo): int|false
     {
-        // Mappa gravity se presente
-        if (isset($todo['gravity'])) {
-            $todo['gravity'] = in_array($todo['gravity'], $this->gravityMap) ? $todo['gravity'] : '01_GRAVITY_LOW';
+        // Mappatura gravity corretta
+        if (isset($todo['gravity']) && isset($this->gravityMap[$todo['gravity']])) {
+            $todo['gravity'] = $this->gravityMap[$todo['gravity']];
         } else {
             $todo['gravity'] = '01_GRAVITY_LOW';
         }
@@ -152,23 +170,29 @@ class RecordToTodo
         ];
 
         $ch = curl_init($this->apiUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Accept: application/json'
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($data),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ]
         ]);
 
         $response = curl_exec($ch);
+
         if (curl_errno($ch)) {
             $this->logger->error("Errore cURL (issue): " . curl_error($ch));
             curl_close($ch);
             return false;
         }
+
         curl_close($ch);
 
         $responseData = json_decode($response, true);
+
         if (!isset($responseData['object']['id'])) {
             $this->logger->error("Creazione issue fallita: " . $response);
             return false;
@@ -187,6 +211,7 @@ class RecordToTodo
                 id_todo_twprj = :issueId
             WHERE id = :id
         ");
+
         $stmt->execute([
             ':id' => $id,
             ':issueId' => $issueId
@@ -201,6 +226,7 @@ class RecordToTodo
                 sent_at = NOW()
             WHERE id = :id
         ");
+
         $stmt->execute([':id' => $id]);
     }
 }
