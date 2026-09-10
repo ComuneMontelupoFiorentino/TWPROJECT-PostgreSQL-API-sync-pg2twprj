@@ -137,14 +137,35 @@ class SyncStatusTwToSIT
             'Accept: application/json'
         ]);
 
+        // --- TIMEOUT: impediscono il blocco infinito ---
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // max 10s per connettersi
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);        // max 60s per l'intera chiamata
+        curl_setopt($ch, CURLOPT_NOSIGNAL, true);
+
         $response = curl_exec($ch);
-        if (curl_errno($ch)) {
-            $this->logger->error("Errore cURL: " . curl_error($ch));
+
+        if ($response === false) {
+            $this->logger->error(
+                "Errore cURL: " . curl_error($ch) . " [errno " . curl_errno($ch) . "]"
+            );
             curl_close($ch);
             return null;
         }
 
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         curl_close($ch);
-        return json_decode($response, true);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            $this->logger->error("Twproject API HTTP {$httpCode}");
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        if (!is_array($decoded)) {
+            $this->logger->error("Risposta Twproject non JSON valido");
+            return null;
+        }
+
+        return $decoded;
     }
 }
