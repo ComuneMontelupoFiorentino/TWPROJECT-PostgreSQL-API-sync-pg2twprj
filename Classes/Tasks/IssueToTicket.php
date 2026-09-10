@@ -146,12 +146,12 @@ class IssueToTicket
             $this->logger->info("Nessun documento trovato per ticket {$idTicket}");
             return;
         }
-    
+
         $stmtDoc = $this->pdo->prepare("
             INSERT INTO segn.issue_docs_attachment (id_ticket, url, file_name)
             VALUES (:id_ticket, :url, :file_name)
         ");
-    
+
         foreach ($files as $file) {
             $publicUrl = $this->publicBaseUrl . rawurlencode($file['name']);
             $stmtDoc->execute([
@@ -200,23 +200,23 @@ class IssueToTicket
         if (!is_dir($this->downloadDir)) {
             mkdir($this->downloadDir, 0777, true);
         }
-    
+
         $idIssue = (int)$issue['id'];
         $documents = $issue['documents'] ?? [];
         $filesLocal = [];
-    
+
         foreach ($documents as $doc) {
             if (empty($doc['url']) || empty($doc['name'])) {
                 continue;
             }
-    
+
             $originalName = $doc['name'];
             $sanitized    = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-    
+
             // Nome fisico univoco: prefisso con id_issue per evitare collisioni
             $fileName = "issue{$idIssue}_{$sanitized}";
             $savePath = $this->downloadDir . '/' . $fileName;
-    
+
             try {
                 $this->downloadFile($doc['url'], $savePath);
                 $filesLocal[] = [
@@ -228,9 +228,10 @@ class IssueToTicket
                 $this->logger->error("Errore download file {$fileName}: {$e->getMessage()}");
             }
         }
-    
+
         return $filesLocal;
     }
+
     private function downloadFile(string $url, string $savePath): void
     {
         $fp = fopen($savePath, 'w');
